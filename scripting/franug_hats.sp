@@ -214,8 +214,6 @@ public int DIDMenuHandler(Menu menu, MenuAction action, int client, int itemNum)
         CPrintToChat(client, " {darkred}[f-Hats] %T", "Chosen", client, g_eHats[g_Elegido[client]].Name);
         CreateHat(client);
         Showmenuh(client, GetMenuSelectionPosition());
-    } else if (action == MenuAction_End) {
-        delete menu;
     }
     return 0;
 }
@@ -664,8 +662,6 @@ public int DIDMenuHandler2(Menu menu, MenuAction action, int client, int itemNum
         if (itemNum == MenuCancel_ExitBack) {
             DOMenu(client, 0);
         }
-    } else if (action == MenuAction_End) {
-        delete menu;
     }
     return 0;
 }
@@ -898,8 +894,6 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
                 KvSetVector(kv, "angles", m_fTemp);
                 KvRewind(kv);
                 KeyValuesToFile(kv, sConfig);
-
-                // PrintToChatAll("pasado4 numero %f",Items.fPosition[0]);
             }
 
             CPrintToChat(client, " {darkred}[f-Hats] %T", "ConfigSaved", client);
@@ -913,9 +907,6 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
         if (itemNum == MenuCancel_ExitBack) {
             DOMenu(client, 0);
         }
-        // PrintToServer("Client %d's menu was cancelled.  Reason: %d", client, itemNum);
-    } else if (action == MenuAction_End) {
-        delete menu;
     }
     return 0;
 }
