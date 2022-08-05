@@ -214,6 +214,9 @@ public int DIDMenuHandler(Menu menu, MenuAction action, int client, int itemNum)
         CPrintToChat(client, " {darkred}[f-Hats] %T", "Chosen", client, g_eHats[g_Elegido[client]].Name);
         CreateHat(client);
         Showmenuh(client, GetMenuSelectionPosition());
+    } else if (action == MenuAction_Cancel) {
+        viendo[client] = false;
+        SetThirdPersonView(client, false);
     }
     return 0;
 }
