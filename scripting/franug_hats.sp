@@ -146,7 +146,7 @@ public void OnClientPutInServer(int client) {
 }
 
 public MRESReturn SetModel(int client, Handle hParams) {
-    if (timers[client] != INVALID_HANDLE) {
+    if (IsValidHandle(timers[client])) {
         return MRES_Ignored;
     } else
         timers[client] = CreateTimer(2.5, ReHats, client);
@@ -214,16 +214,13 @@ public int DIDMenuHandler(Menu menu, MenuAction action, int client, int itemNum)
         CPrintToChat(client, " {darkred}[f-Hats] %T", "Chosen", client, g_eHats[g_Elegido[client]].Name);
         CreateHat(client);
         Showmenuh(client, GetMenuSelectionPosition());
-    } else if (action == MenuAction_Cancel) {
-        viendo[client] = false;
-        SetThirdPersonView(client, false);
     }
     return 0;
 }
 
 public void LoadHats() {
     for (int i = 0; i < g_hats; ++i) {
-        if (g_mHats[g_hats] != INVALID_HANDLE) {
+        if (IsValidHandle(g_mHats[g_hats])) {
             CloseHandle(g_mHats[g_hats]);
             g_mHats[g_hats] = INVALID_HANDLE;
         }
@@ -231,7 +228,7 @@ public void LoadHats() {
     g_hats = 0;
     BuildPath(Path_SM, sConfig, PLATFORM_MAX_PATH, "configs/franug_hats.txt");
 
-    if (kv != INVALID_HANDLE)
+    if (IsValidHandle(kv))
         CloseHandle(kv);
 
     kv = CreateKeyValues("Hats");
@@ -277,7 +274,7 @@ public void LoadHats() {
     }
     KvRewind(kv);
 
-    if (menu_hats != INVALID_HANDLE)
+    if (IsValidHandle(menu_hats))
         CloseHandle(menu_hats);
 
     menu_hats = new Menu(DIDMenuHandler);
@@ -289,7 +286,7 @@ public void LoadHats() {
     }
     SetMenuExitButton(menu_hats, true);
 
-    if (menu_editor != INVALID_HANDLE)
+    if (IsValidHandle(menu_editor))
         CloseHandle(menu_editor);
 
     menu_editor = new Menu(DIDMenuHandler2);
@@ -360,7 +357,7 @@ void CreateHat(int client) {
 
     bool found = false;
     Hat2 Items;
-    if (g_mHats[g_Elegido[client]] != INVALID_HANDLE) {
+    if (IsValidHandle(g_mHats[g_Elegido[client]])) {
 
         char buscado[64];
         GetClientModel(client, buscado, 64);
@@ -443,7 +440,7 @@ public Action PlayerDeath(Handle event, char[] name, bool dontBroadcast) {
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
     if (IsFakeClient(client))
         return Plugin_Continue;
-    if (timers[client] != INVALID_HANDLE) {
+    if (IsValidHandle(timers[client])) {
         KillTimer(timers[client]);
         timers[client] = INVALID_HANDLE;
     }
@@ -473,7 +470,7 @@ public void OnClientDisconnect(int client) {
         Format(SprayString, sizeof(SprayString), "%i", g_Elegido[client]);
         SetClientCookie(client, c_GameSprays, SprayString);
     }
-    if (timers[client] != INVALID_HANDLE) {
+    if (IsValidHandle(timers[client])) {
         KillTimer(timers[client]);
         timers[client] = INVALID_HANDLE;
     }
