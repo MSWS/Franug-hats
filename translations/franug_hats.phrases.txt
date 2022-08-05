@@ -78,4 +78,8 @@
 		"ru"	"Изменить положения шляпы для этой модели"
 		"zho"	"編輯這個人物模組的裝飾品位置"
 	}
+	"MidAirBlocked"
+	{
+		"en" "You must be on the ground to pick a hat."
+	}
 }

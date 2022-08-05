@@ -62,7 +62,7 @@ Handle c_GameSprays, kv, hSetModel, mp_forcecamera;
 Menu menu_hats, menu_editor, menu_editor2;
 
 // ConVars
-Handle g_hThirdPerson = INVALID_HANDLE;
+ConVar g_hThirdPerson, g_bAllowMovement, g_bAllowMidair;
 
 Handle timers[MAXPLAYERS + 1];
 
@@ -88,7 +88,9 @@ public void OnPluginStart() {
     RegConsoleCmd("sm_hats", Command_Hats);
 
     // ConVars
-    g_hThirdPerson = CreateConVar("sm_franughats_thirdperson", "1", "Enable/Disable third-person view.");
+    g_hThirdPerson   = CreateConVar("sm_franughats_thirdperson", "1", "Enable/Disable third-person view.", _, true, 0.0, true, 1.0);
+    g_bAllowMovement = CreateConVar("sm_franughats_allowmovement", "0", "Enable/Disable moving while selecting hats.", _, true, 0.0, true, 1.0);
+    g_bAllowMidair   = CreateConVar("sm_franughats_allowmidair", "1", "Enable/Disable picking hats while in midair.", _, true, 0.0, true, 1.0);
 
     // ConVar Changes.
     HookConVarChange(g_hThirdPerson, CVarChanged);
@@ -180,6 +182,10 @@ public Action Event_PlayerSpawn(Handle event, char[] name, bool dontBroadcast) {
 }
 
 public Action Command_Hats(int client, int args) {
+    if (!(GetEntityFlags(client) & FL_ONGROUND) && !g_bAllowMidair.BoolValue) {
+        CPrintToChat(client, " {darkred}[f-Hats] %T", "MidAirBlocked", client);
+        return Plugin_Handled;
+    }
     Showmenuh(client, 0);
     return Plugin_Handled;
 }
@@ -521,7 +527,8 @@ stock void SetThirdPersonView(int client, bool third) {
         SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 0);
         SetEntProp(client, Prop_Send, "m_iFOV", 120);
         SendConVarValue(client, mp_forcecamera, "1");
-        SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 0.0);
+        if (!g_bAllowMovement.BoolValue)
+            SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 0.0);
 
         SetEntProp(client, Prop_Send, "m_iHideHUD", GetEntProp(client, Prop_Send, "m_iHideHUD") | HIDE_RADAR_CSGO);
         SetEntProp(client, Prop_Send, "m_iHideHUD", GetEntProp(client, Prop_Send, "m_iHideHUD") | HIDE_CROSSHAIR_CSGO);
@@ -534,7 +541,8 @@ stock void SetThirdPersonView(int client, bool third) {
     char valor[6];
     GetConVarString(mp_forcecamera, valor, 6);
     SendConVarValue(client, mp_forcecamera, valor);
-    SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.0);
+    if (!g_bAllowMovement.BoolValue)
+        SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.0);
 
     SetEntProp(client, Prop_Send, "m_iHideHUD", GetEntProp(client, Prop_Send, "m_iHideHUD") & ~HIDE_RADAR_CSGO);
     SetEntProp(client, Prop_Send, "m_iHideHUD", GetEntProp(client, Prop_Send, "m_iHideHUD") & ~HIDE_CROSSHAIR_CSGO);
@@ -699,8 +707,8 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
             int index;
             if (g_mHats[g_Elegido[client]] == INVALID_HANDLE) {
                 g_mHats[g_Elegido[client]] = CreateArray(134);
-                Items.fPosition = g_eHats[g_Elegido[client]].fPosition;
-                Items.fAngles   = g_eHats[g_Elegido[client]].fAngles;
+                Items.fPosition            = g_eHats[g_Elegido[client]].fPosition;
+                Items.fAngles              = g_eHats[g_Elegido[client]].fAngles;
                 Format(Items.szAttachment, 64, "facemask");
                 Format(Items.Name, 64, buscado);
 
