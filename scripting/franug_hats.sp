@@ -24,33 +24,35 @@
 #include <multicolors>
 
 #pragma newdecls required // let's go new syntax! 
+#pragma semicolon 1
 
 #define HIDE_CROSSHAIR_CSGO 1<<8
 #define HIDE_RADAR_CSGO 1<<12
 
-enum Hat
+enum struct Hat
 {
-	String:Name[64],
-	String:szModel[PLATFORM_MAX_PATH],
-	String:szAttachment[64],
-	Float:fPosition[3],
-	Float:fAngles[3],
-	bool:bBonemerge,
-	bool:bHide,
-	String:flag[8]
+	char Name[64];
+	char szModel[PLATFORM_MAX_PATH];
+	char szAttachment[64];
+	float fPosition[3];
+	float fAngles[3];
+	bool bBonemerge;
+	bool bHide;
+	char flag[8];
 }
 
-enum Hat2
+enum struct Hat2
 {
-	String:Name[64],
-	String:szAttachment[64],
-	Float:fPosition[3],
-	Float:fAngles[3]
+	char Name[64];
+	char szAttachment[64];
+	float fPosition[3];
+	float fAngles[3];
 }
 
 bool viendo[MAXPLAYERS+1];
 
-int g_eHats[1024][Hat], g_Elegido[MAXPLAYERS + 1], g_hats, g_Hat[MAXPLAYERS+1];
+Hat g_eHats[1024];
+int g_Elegido[MAXPLAYERS + 1], g_hats, g_Hat[MAXPLAYERS+1];
 Handle g_mHats[1024];
 
 //new Handle:g_hLookupAttachment = INVALID_HANDLE;
@@ -224,7 +226,7 @@ public int DIDMenuHandler(Menu menu, MenuAction action,int client,int itemNum)
 		
 		GetMenuItem(menu, itemNum, info, sizeof(info));
 		int index = StringToInt(info);
-		if(!HasPermission(client, g_eHats[index][flag]))
+		if(!HasPermission(client, g_eHats[index].flag))
 		{
 			CPrintToChat(client, " {darkred}[f-Hats] %T",  "NoAccess",client);
 			Showmenuh(client, GetMenuSelectionPosition());
@@ -232,7 +234,7 @@ public int DIDMenuHandler(Menu menu, MenuAction action,int client,int itemNum)
 		}
 		RemoveHat(client);
 		g_Elegido[client] = index;
-		CPrintToChat(client, " {darkred}[f-Hats] %T", "Chosen", client, g_eHats[g_Elegido[client]][Name]);
+		CPrintToChat(client, " {darkred}[f-Hats] %T", "Chosen", client, g_eHats[g_Elegido[client]].Name);
 		CreateHat(client);
 		Showmenuh(client, GetMenuSelectionPosition());
 	}
@@ -265,22 +267,22 @@ public void LoadHats()
 	kv = CreateKeyValues("Hats");
 	FileToKeyValues(kv, sConfig);
 
-	int g_array[Hat2];
+	Hat g_array;
 	if(KvGotoFirstSubKey(kv))
 	{
 		do
 		{
 			float m_fTemp[3];
-			KvGetSectionName(kv, g_eHats[g_hats][Name], 64);
-			KvGetString(kv, "model", g_eHats[g_hats][szModel], PLATFORM_MAX_PATH);
+			KvGetSectionName(kv, g_eHats[g_hats].Name, 64);
+			KvGetString(kv, "model", g_eHats[g_hats].szModel, PLATFORM_MAX_PATH);
 			KvGetVector(kv, "position", m_fTemp);
-			g_eHats[g_hats][fPosition] = m_fTemp;
+			g_eHats[g_hats].fPosition = m_fTemp;
 			KvGetVector(kv, "angles", m_fTemp);
-			g_eHats[g_hats][fAngles] = m_fTemp;
-			g_eHats[g_hats][bBonemerge] = (KvGetNum(kv, "bonemerge", 0)?true:false);
-			g_eHats[g_hats][bHide] = (KvGetNum(kv, "hide", 1)?true:false);
-			KvGetString(kv, "attachment", g_eHats[g_hats][szAttachment], 64, "facemask");
-			KvGetString(kv, "flag", g_eHats[g_hats][flag], 8, "");
+			g_eHats[g_hats].fAngles = m_fTemp;
+			g_eHats[g_hats].bBonemerge = (KvGetNum(kv, "bonemerge", 0)?true:false);
+			g_eHats[g_hats].bHide = (KvGetNum(kv, "hide", 1)?true:false);
+			KvGetString(kv, "attachment", g_eHats[g_hats].szAttachment, 64, "facemask");
+			KvGetString(kv, "flag", g_eHats[g_hats].flag, 8, "");
 			
 			if(KvJumpToKey(kv, "playermodels"))
 			{
@@ -290,15 +292,15 @@ public void LoadHats()
 				{
 					do
 					{
-						KvGetSectionName(kv, g_array[Name], 64);
-						ReplaceString(g_array[Name], 64, "&", "/");
+						KvGetSectionName(kv, g_array.Name, 64);
+						ReplaceString(g_array.Name, 64, "&", "/");
 						KvGetVector(kv, "position", m_fTemp);
-						g_array[fPosition] = m_fTemp;
+						g_array.fPosition = m_fTemp;
 						KvGetVector(kv, "angles", m_fTemp);
-						g_array[fAngles] = m_fTemp;
-						KvGetString(kv, "attachment", g_array[szAttachment], 64, "facemask");
+						g_array.fAngles = m_fTemp;
+						KvGetString(kv, "attachment", g_array.szAttachment, 64, "facemask");
 						
-						PushArrayArray(g_mHats[g_hats], g_array[0]);
+						PushArrayArray(g_mHats[g_hats], g_array);
 				
 				
 					}while (KvGotoNextKey(kv));
@@ -318,7 +320,7 @@ public void LoadHats()
 	char item[4];
 	for (int i=0; i<g_hats; ++i) {
 		Format(item, 4, "%i", i);
-		AddMenuItem(menu_hats, item, g_eHats[i][Name]);
+		AddMenuItem(menu_hats, item, g_eHats[i].Name);
 	}
 	SetMenuExitButton(menu_hats, true);
 	
@@ -364,7 +366,7 @@ public void LoadHats()
 	
 }
 
-/* stock LookupAttachment(client, String:point[])
+/* stock LookupAttachment(client, char point[])
 {
     if(g_hLookupAttachment==INVALID_HANDLE) return 0;
     if( client<=0 || !IsClientInGame(client) ) return 0;
@@ -375,10 +377,10 @@ public void OnMapStart()
 {
 	for (int i=0; i<g_hats; ++i)
 	{
-		if(!StrEqual(g_eHats[i][szModel], "none") && strcmp(g_eHats[i][szModel], "")!=0)
+		if(!StrEqual(g_eHats[i].szModel, "none") && strcmp(g_eHats[i].szModel, "")!=0)
 		{	
-			PrecacheModel(g_eHats[i][szModel], true);
-			Downloader_AddFileToDownloadsTable(g_eHats[i][szModel]);
+			PrecacheModel(g_eHats[i].szModel, true);
+			Downloader_AddFileToDownloadsTable(g_eHats[i].szModel);
 		}
 	}
 }
@@ -389,15 +391,15 @@ void CreateHat(int client)
 
 	//PrintToChatAll("paso0");
 /* 	new bool:second = false;
-	if(!LookupAttachment(client, g_eHats[g_Elegido[client]][szAttachment]))
+	if(!LookupAttachment(client, g_eHats[g_Elegido[client]].szAttachment))
 	{
 		if(LookupAttachment(client, "forward")) second = true;
 		else return;
 	} */
 	
-	if(StrEqual(g_eHats[g_Elegido[client]][szModel], "none")) return;
+	if(StrEqual(g_eHats[g_Elegido[client]].szModel, "none")) return;
 	
- 	if(!HasPermission(client, g_eHats[g_Elegido[client]][flag]))
+ 	if(!HasPermission(client, g_eHats[g_Elegido[client]].flag))
 	{
 		g_Elegido[client] = 0;
 		return;
@@ -413,7 +415,7 @@ void CreateHat(int client)
 	GetClientAbsAngles(client,m_fHatAngles);
 	
 	bool found = false;
-	int Items[Hat2];
+	Hat2 Items;
 	if(g_mHats[g_Elegido[client]] != INVALID_HANDLE)
 	{
 		
@@ -423,17 +425,17 @@ void CreateHat(int client)
 		
 		for(int i=0;i<GetArraySize(g_mHats[g_Elegido[client]]);++i)
 		{
-			GetArrayArray(g_mHats[g_Elegido[client]], i, Items[0]);
-			if(StrEqual(Items[Name], buscado))
+			GetArrayArray(g_mHats[g_Elegido[client]], i, Items);
+			if(StrEqual(Items.Name, buscado))
 			{
-				m_fHatAngles[0] += Items[fAngles][0];
-				m_fHatAngles[1] += Items[fAngles][1];
-				m_fHatAngles[2] += Items[fAngles][2];
+				m_fHatAngles[0] += Items.fAngles[0];
+				m_fHatAngles[1] += Items.fAngles[1];
+				m_fHatAngles[2] += Items.fAngles[2];
 
 	
-				m_fOffset[0] = Items[fPosition][0];
-				m_fOffset[1] = Items[fPosition][1];
-				m_fOffset[2] = Items[fPosition][2];
+				m_fOffset[0] = Items.fPosition[0];
+				m_fOffset[1] = Items.fPosition[1];
+				m_fOffset[2] = Items.fPosition[2];
 				found = true;
 				
 				break;
@@ -444,14 +446,14 @@ void CreateHat(int client)
 	
 	if(!found)
 	{
-		m_fHatAngles[0] += g_eHats[g_Elegido[client]][fAngles][0];
-		m_fHatAngles[1] += g_eHats[g_Elegido[client]][fAngles][1];
-		m_fHatAngles[2] += g_eHats[g_Elegido[client]][fAngles][2];
+		m_fHatAngles[0] += g_eHats[g_Elegido[client]].fAngles[0];
+		m_fHatAngles[1] += g_eHats[g_Elegido[client]].fAngles[1];
+		m_fHatAngles[2] += g_eHats[g_Elegido[client]].fAngles[2];
 
 	
-		m_fOffset[0] = g_eHats[g_Elegido[client]][fPosition][0];
-		m_fOffset[1] = g_eHats[g_Elegido[client]][fPosition][1];
-		m_fOffset[2] = g_eHats[g_Elegido[client]][fPosition][2];
+		m_fOffset[0] = g_eHats[g_Elegido[client]].fPosition[0];
+		m_fOffset[1] = g_eHats[g_Elegido[client]].fPosition[1];
+		m_fOffset[2] = g_eHats[g_Elegido[client]].fPosition[2];
 	}
 	
 
@@ -463,12 +465,12 @@ void CreateHat(int client)
 	
 	// Create the hat entity
 	int m_iEnt = CreateEntityByName("prop_dynamic_override");
-	DispatchKeyValue(m_iEnt, "model", g_eHats[g_Elegido[client]][szModel]);
+	DispatchKeyValue(m_iEnt, "model", g_eHats[g_Elegido[client]].szModel);
 	DispatchKeyValue(m_iEnt, "spawnflags", "256");
 	DispatchKeyValue(m_iEnt, "solid", "0");
 	SetEntPropEnt(m_iEnt, Prop_Send, "m_hOwnerEntity", client);
 	
-	if(g_eHats[g_Elegido[client]][bBonemerge]) Bonemerge(m_iEnt);
+	if(g_eHats[g_Elegido[client]].bBonemerge) Bonemerge(m_iEnt);
 
 	DispatchSpawn(m_iEnt);	
 	AcceptEntityInput(m_iEnt, "TurnOn", m_iEnt, m_iEnt, 0);
@@ -477,7 +479,7 @@ void CreateHat(int client)
 	g_Hat[client]=EntIndexToEntRef(m_iEnt);
 	
 	// We don't want the client to see his own hat
-	if(g_eHats[g_Elegido[client]][bHide]) SDKHook(m_iEnt, SDKHook_SetTransmit, ShouldHide);
+	if(g_eHats[g_Elegido[client]].bHide) SDKHook(m_iEnt, SDKHook_SetTransmit, ShouldHide);
 	
 	// Teleport the hat to the right position and attach it
 	TeleportEntity(m_iEnt, m_fHatOrigin, m_fHatAngles, NULL_VECTOR); 
@@ -485,9 +487,9 @@ void CreateHat(int client)
 	SetVariantString("!activator");
 	AcceptEntityInput(m_iEnt, "SetParent", client, m_iEnt, 0);
 
-	if(!found) SetVariantString(g_eHats[g_Elegido[client]][szAttachment]);
-	else SetVariantString(Items[szAttachment]);
-/* 	if(!second) SetVariantString(g_eHats[g_Elegido[client]][szAttachment]);
+	if(!found) SetVariantString(g_eHats[g_Elegido[client]].szAttachment);
+	else SetVariantString(Items.szAttachment);
+/* 	if(!second) SetVariantString(g_eHats[g_Elegido[client]].szAttachment);
 	else SetVariantString("forward"); */
 	AcceptEntityInput(m_iEnt, "SetParentAttachmentMaintainOffset", m_iEnt, m_iEnt, 0);	
 }
@@ -573,7 +575,7 @@ public void RemoveHat(int client)
 	int entity = EntRefToEntIndex(g_Hat[client]);
 	if(entity != INVALID_ENT_REFERENCE && IsValidEdict(entity) && entity != 0)
 	{
-		if(g_eHats[g_Elegido[client]][bHide]) SDKUnhook(entity, SDKHook_SetTransmit, ShouldHide);
+		if(g_eHats[g_Elegido[client]].bHide) SDKUnhook(entity, SDKHook_SetTransmit, ShouldHide);
 		AcceptEntityInput(entity, "Kill");
 		g_Hat[client] = INVALID_ENT_REFERENCE;
 	}
@@ -617,7 +619,7 @@ stock void SetThirdPersonView(int client, bool third)
 
 public Action DOMenu(int client,int args)
 {
-	if(StrEqual(g_eHats[g_Elegido[client]][szModel], "none"))
+	if(StrEqual(g_eHats[g_Elegido[client]].szModel, "none"))
 	{
 		CPrintToChat(client, " {darkred}[f-Hats] %T", "FirstChoose",client);
 		return Plugin_Handled;
@@ -704,7 +706,7 @@ public int DIDMenuHandler2(Menu menu, MenuAction action, int client, int itemNum
 			
 			posicion = StringToFloat(info);
 			
-			g_eHats[g_Elegido[client]][fPosition][numero] += posicion;
+			g_eHats[g_Elegido[client]].fPosition[numero] += posicion;
 			RemoveHat(client);
 			CreateHat(client);
 			
@@ -730,7 +732,7 @@ public int DIDMenuHandler2(Menu menu, MenuAction action, int client, int itemNum
 			
 			posicion = StringToFloat(info);
 			
-			g_eHats[g_Elegido[client]][fAngles][numero] += posicion;
+			g_eHats[g_Elegido[client]].fAngles[numero] += posicion;
 			RemoveHat(client);
 			CreateHat(client);
 			
@@ -738,15 +740,15 @@ public int DIDMenuHandler2(Menu menu, MenuAction action, int client, int itemNum
 		else if (StrContains(info, "Save", false) != -1)
 		{
 			
-			KvJumpToKey(kv, g_eHats[g_Elegido[client]][Name]);
+			KvJumpToKey(kv, g_eHats[g_Elegido[client]].Name);
 			float m_fTemp[3];
-			m_fTemp[0] = g_eHats[g_Elegido[client]][fPosition][0];
-			m_fTemp[1] = g_eHats[g_Elegido[client]][fPosition][1];
-			m_fTemp[2] = g_eHats[g_Elegido[client]][fPosition][2];
+			m_fTemp[0] = g_eHats[g_Elegido[client]].fPosition[0];
+			m_fTemp[1] = g_eHats[g_Elegido[client]].fPosition[1];
+			m_fTemp[2] = g_eHats[g_Elegido[client]].fPosition[2];
 			KvSetVector(kv, "position", m_fTemp);
-			m_fTemp[0] = g_eHats[g_Elegido[client]][fAngles][0];
-			m_fTemp[1] = g_eHats[g_Elegido[client]][fAngles][1];
-			m_fTemp[2] = g_eHats[g_Elegido[client]][fAngles][2];
+			m_fTemp[0] = g_eHats[g_Elegido[client]].fAngles[0];
+			m_fTemp[1] = g_eHats[g_Elegido[client]].fAngles[1];
+			m_fTemp[2] = g_eHats[g_Elegido[client]].fAngles[2];
 			KvSetVector(kv, "angles", m_fTemp);
 			KvRewind(kv);
 			KeyValuesToFile(kv, sConfig);
@@ -800,7 +802,7 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
 			
 			posicion = StringToFloat(info);
 			
-			int Items[Hat2];
+			Hat2 Items;
 			char buscado[64];
 			
 			GetClientModel(client, buscado, 64);
@@ -810,12 +812,12 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
 			{
 				g_mHats[g_Elegido[client]] = CreateArray(134);
 				
-				Items[fPosition] = g_eHats[g_Elegido[client]][fPosition];
-				Items[fAngles] = g_eHats[g_Elegido[client]][fAngles];
-				Format(Items[szAttachment], 64, "facemask");
-				Format(Items[Name], 64, buscado);
+				Items.fPosition = g_eHats[g_Elegido[client]].fPosition;
+				Items.fAngles = g_eHats[g_Elegido[client]].fAngles;
+				Format(Items.szAttachment, 64, "facemask");
+				Format(Items.Name, 64, buscado);
 				
-				index = PushArrayArray(g_mHats[g_Elegido[client]], Items[0]);
+				index = PushArrayArray(g_mHats[g_Elegido[client]], Items);
 				found = true;
 				
 			}		
@@ -824,8 +826,8 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
 			{
 				for(int i=0;i<GetArraySize(g_mHats[g_Elegido[client]]);++i)
 				{
-					GetArrayArray(g_mHats[g_Elegido[client]], i, Items[0]);
-					if(StrEqual(Items[Name], buscado))
+					GetArrayArray(g_mHats[g_Elegido[client]], i, Items);
+					if(StrEqual(Items.Name, buscado))
 					{
 						found = true;
 						index = i;
@@ -836,18 +838,18 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
 			
 			if(!found)
 			{
-				Items[fPosition] = g_eHats[g_Elegido[client]][fPosition];
-				Items[fAngles] = g_eHats[g_Elegido[client]][fAngles];
-				Items[fPosition][numero] += posicion;
-				Format(Items[szAttachment], 64, "facemask");
-				Format(Items[Name], 64, buscado);
+				Items.fPosition = g_eHats[g_Elegido[client]].fPosition;
+				Items.fAngles = g_eHats[g_Elegido[client]].fAngles;
+				Items.fPosition[numero] += posicion;
+				Format(Items.szAttachment, 64, "facemask");
+				Format(Items.Name, 64, buscado);
 			
-				PushArrayArray(g_mHats[g_Elegido[client]], Items[0]);
+				PushArrayArray(g_mHats[g_Elegido[client]], Items);
 			}
 			else
 			{
-				Items[fPosition][numero] += posicion;
-				SetArrayArray(g_mHats[g_Elegido[client]], index, Items[0]);
+				Items.fPosition[numero] += posicion;
+				SetArrayArray(g_mHats[g_Elegido[client]], index, Items);
 			}
 			RemoveHat(client);
 			CreateHat(client);
@@ -874,7 +876,7 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
 			
 			posicion = StringToFloat(info);
 			
-			int Items[Hat2];
+			Hat2 Items;
 			char buscado[64];
 			
 			GetClientModel(client, buscado, 64);
@@ -884,12 +886,12 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
 			{
 				g_mHats[g_Elegido[client]] = CreateArray(134);
 				
-				Items[fPosition] = g_eHats[g_Elegido[client]][fPosition];
-				Items[fAngles] = g_eHats[g_Elegido[client]][fAngles];
-				Format(Items[szAttachment], 64, "facemask");
-				Format(Items[Name], 64, buscado);
+				Items.fPosition = g_eHats[g_Elegido[client]].fPosition;
+				Items.fAngles = g_eHats[g_Elegido[client]].fAngles;
+				Format(Items.szAttachment, 64, "facemask");
+				Format(Items.Name, 64, buscado);
 				
-				index = PushArrayArray(g_mHats[g_Elegido[client]], Items[0]);
+				index = PushArrayArray(g_mHats[g_Elegido[client]], Items);
 				found = true;
 				
 			}		
@@ -898,8 +900,8 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
 			{
 				for(int i=0;i<GetArraySize(g_mHats[g_Elegido[client]]);++i)
 				{
-					GetArrayArray(g_mHats[g_Elegido[client]], i, Items[0]);
-					if(StrEqual(Items[Name], buscado))
+					GetArrayArray(g_mHats[g_Elegido[client]], i, Items);
+					if(StrEqual(Items.Name, buscado))
 					{
 						found = true;
 						index = i;
@@ -910,18 +912,18 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
 			
 			if(!found)
 			{
-				Items[fPosition] = g_eHats[g_Elegido[client]][fPosition];
-				Items[fAngles] = g_eHats[g_Elegido[client]][fAngles];
-				Items[fAngles][numero] += posicion;
-				Format(Items[szAttachment], 64, "facemask");
-				Format(Items[Name], 64, buscado);
+				Items.fPosition = g_eHats[g_Elegido[client]].fPosition;
+				Items.fAngles = g_eHats[g_Elegido[client]].fAngles;
+				Items.fAngles[numero] += posicion;
+				Format(Items.szAttachment, 64, "facemask");
+				Format(Items.Name, 64, buscado);
 			
-				PushArrayArray(g_mHats[g_Elegido[client]], Items[0]);
+				PushArrayArray(g_mHats[g_Elegido[client]], Items);
 			}
 			else
 			{
-				Items[fAngles][numero] += posicion;
-				SetArrayArray(g_mHats[g_Elegido[client]], index, Items[0]);
+				Items.fAngles[numero] += posicion;
+				SetArrayArray(g_mHats[g_Elegido[client]], index, Items);
 			}
 			RemoveHat(client);
 			CreateHat(client);
@@ -929,7 +931,7 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
 		}
 		else if (StrContains(info, "Save", false) != -1)
 		{
-			int Items[Hat2];
+			Hat2 Items;
 			char buscado[64],temp[64];
 			float m_fTemp[3];
 			GetClientModel(client, buscado, 64);
@@ -938,7 +940,7 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
 			{
 				
 				g_mHats[g_Elegido[client]] = CreateArray(134);
-				KvJumpToKey(kv, g_eHats[g_Elegido[client]][Name]);
+				KvJumpToKey(kv, g_eHats[g_Elegido[client]].Name);
 				KvJumpToKey(kv, "playermodels", true);
 				//KvGotoFirstSubKey(kv);
 				
@@ -949,20 +951,20 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
 				//KvSetSectionName(kv, temp);
 				
 							
-				m_fTemp[0] = g_eHats[g_Elegido[client]][fPosition][0];
-				m_fTemp[1] = g_eHats[g_Elegido[client]][fPosition][1];
-				m_fTemp[2] = g_eHats[g_Elegido[client]][fPosition][2];
+				m_fTemp[0] = g_eHats[g_Elegido[client]].fPosition[0];
+				m_fTemp[1] = g_eHats[g_Elegido[client]].fPosition[1];
+				m_fTemp[2] = g_eHats[g_Elegido[client]].fPosition[2];
 				KvSetVector(kv, "position", m_fTemp);
-				m_fTemp[0] = g_eHats[g_Elegido[client]][fAngles][0];
-				m_fTemp[1] = g_eHats[g_Elegido[client]][fAngles][1];
-				m_fTemp[2] = g_eHats[g_Elegido[client]][fAngles][2];
+				m_fTemp[0] = g_eHats[g_Elegido[client]].fAngles[0];
+				m_fTemp[1] = g_eHats[g_Elegido[client]].fAngles[1];
+				m_fTemp[2] = g_eHats[g_Elegido[client]].fAngles[2];
 				KvSetVector(kv, "angles", m_fTemp);
-				Items[fPosition] = g_eHats[g_Elegido[client]][fPosition];
-				Items[fAngles] = g_eHats[g_Elegido[client]][fAngles];
-				Format(Items[szAttachment], 64, "facemask");
-				Format(Items[Name], 64, buscado);
+				Items.fPosition = g_eHats[g_Elegido[client]].fPosition;
+				Items.fAngles = g_eHats[g_Elegido[client]].fAngles;
+				Format(Items.szAttachment, 64, "facemask");
+				Format(Items.Name, 64, buscado);
 				
-				PushArrayArray(g_mHats[g_Elegido[client]], Items[0]);
+				PushArrayArray(g_mHats[g_Elegido[client]], Items);
 				found = true;
 				KvRewind(kv);
 				KeyValuesToFile(kv, sConfig);
@@ -978,8 +980,8 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
 			{
 				for(int i=0;i<GetArraySize(g_mHats[g_Elegido[client]]);++i)
 				{
-					GetArrayArray(g_mHats[g_Elegido[client]], i, Items[0]);
-					if(StrEqual(Items[Name], buscado))
+					GetArrayArray(g_mHats[g_Elegido[client]], i, Items);
+					if(StrEqual(Items.Name, buscado))
 					{
 						found = true;
 						break;
@@ -989,7 +991,7 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
 			
 			if(!found)
 			{
-				KvJumpToKey(kv, g_eHats[g_Elegido[client]][Name]);
+				KvJumpToKey(kv, g_eHats[g_Elegido[client]].Name);
 				KvJumpToKey(kv, "playermodels", true);
 				//KvGotoFirstSubKey(kv);
 				
@@ -999,26 +1001,26 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
 				//ReplaceString(temp, 64, "&","/");
 				//KvSetSectionName(kv, temp);
 				
-				m_fTemp[0] = g_eHats[g_Elegido[client]][fPosition][0];
-				m_fTemp[1] = g_eHats[g_Elegido[client]][fPosition][1];
-				m_fTemp[2] = g_eHats[g_Elegido[client]][fPosition][2];
+				m_fTemp[0] = g_eHats[g_Elegido[client]].fPosition[0];
+				m_fTemp[1] = g_eHats[g_Elegido[client]].fPosition[1];
+				m_fTemp[2] = g_eHats[g_Elegido[client]].fPosition[2];
 				KvSetVector(kv, "position", m_fTemp);
-				m_fTemp[0] = g_eHats[g_Elegido[client]][fAngles][0];
-				m_fTemp[1] = g_eHats[g_Elegido[client]][fAngles][1];
-				m_fTemp[2] = g_eHats[g_Elegido[client]][fAngles][2];
+				m_fTemp[0] = g_eHats[g_Elegido[client]].fAngles[0];
+				m_fTemp[1] = g_eHats[g_Elegido[client]].fAngles[1];
+				m_fTemp[2] = g_eHats[g_Elegido[client]].fAngles[2];
 				KvSetVector(kv, "angles", m_fTemp);
-				Items[fPosition] = g_eHats[g_Elegido[client]][fPosition];
-				Items[fAngles] = g_eHats[g_Elegido[client]][fAngles];
-				Format(Items[szAttachment], 64, "facemask");
-				Format(Items[Name], 64, buscado);
+				Items.fPosition = g_eHats[g_Elegido[client]].fPosition;
+				Items.fAngles = g_eHats[g_Elegido[client]].fAngles;
+				Format(Items.szAttachment, 64, "facemask");
+				Format(Items.Name, 64, buscado);
 				
-				PushArrayArray(g_mHats[g_Elegido[client]], Items[0]);
+				PushArrayArray(g_mHats[g_Elegido[client]], Items);
 				KvRewind(kv);
 				KeyValuesToFile(kv, sConfig);
 			}
 			else
 			{
-				KvJumpToKey(kv, g_eHats[g_Elegido[client]][Name]);
+				KvJumpToKey(kv, g_eHats[g_Elegido[client]].Name);
 				KvJumpToKey(kv, "playermodels", true);
 				//KvGotoFirstSubKey(kv);
 				ReplaceString(buscado, 64, "/","&");
@@ -1031,18 +1033,18 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
 					//PrintToChatAll("no existe");
 				}
 				
-				m_fTemp[0] = Items[fPosition][0];
-				m_fTemp[1] = Items[fPosition][1];
-				m_fTemp[2] = Items[fPosition][2];
+				m_fTemp[0] = Items.fPosition[0];
+				m_fTemp[1] = Items.fPosition[1];
+				m_fTemp[2] = Items.fPosition[2];
 				KvSetVector(kv, "position", m_fTemp);
-				m_fTemp[0] = Items[fAngles][0];
-				m_fTemp[1] = Items[fAngles][1];
-				m_fTemp[2] = Items[fAngles][2];
+				m_fTemp[0] = Items.fAngles[0];
+				m_fTemp[1] = Items.fAngles[1];
+				m_fTemp[2] = Items.fAngles[2];
 				KvSetVector(kv, "angles", m_fTemp);
 				KvRewind(kv);
 				KeyValuesToFile(kv, sConfig);
 				
-				//PrintToChatAll("pasado4 numero %f",Items[fPosition][0]);
+				//PrintToChatAll("pasado4 numero %f",Items.fPosition[0]);
 			}
 			
 			
