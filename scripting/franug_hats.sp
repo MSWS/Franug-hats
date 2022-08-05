@@ -69,7 +69,7 @@ Handle timers[MAXPLAYERS + 1];
 // ConVar Values
 bool g_bThirdPerson;
 
-#define DATA "3.3.3"
+#define DATA "3.4"
 
 public Plugin myinfo =
 {
@@ -97,13 +97,6 @@ public void OnPluginStart() {
     HookEvent("player_team", PlayerDeath, EventHookMode_Pre);
 
     Handle hGameConf;
-
-    /* 	hGameConf = LoadGameConfigFile("franug_hats.gamedata");
-            StartPrepSDKCall(SDKCall_Entity);
-            PrepSDKCall_SetFromConf(hGameConf, SDKConf_Signature, "LookupAttachment");
-            PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
-            PrepSDKCall_AddParameter(SDKType_String, SDKPass_Pointer);
-            g_hLookupAttachment = EndPrepSDKCall(); */
 
     hGameConf = LoadGameConfigFile("sdktools.games");
     if (hGameConf == INVALID_HANDLE)
@@ -133,7 +126,7 @@ public void OnPluginStart() {
     LoadTranslations("franug_hats.phrases.txt");
 
     // Auto-load the config.
-    // AutoExecConfig(true, "plugin.franughats"); // meh
+    AutoExecConfig(true, "plugin.franughats");
 }
 
 public void CVarChanged(Handle hConvar, char[] oldV, char[] newV) {
@@ -201,8 +194,8 @@ void Showmenuh(int client, int item2) {
     SetMenuTitle(menu_hats, "%T", "HatsMenu", client);
     DisplayMenuAtItem(menu_hats, client, item2, 0);
 
-    // viendo[client] = true;
-    // SetThirdPersonView(client, true);
+    viendo[client] = true;
+    SetThirdPersonView(client, true);
 }
 
 public int DIDMenuHandler(Menu menu, MenuAction action, int client, int itemNum) {
@@ -221,13 +214,8 @@ public int DIDMenuHandler(Menu menu, MenuAction action, int client, int itemNum)
         CPrintToChat(client, " {darkred}[f-Hats] %T", "Chosen", client, g_eHats[g_Elegido[client]].Name);
         CreateHat(client);
         Showmenuh(client, GetMenuSelectionPosition());
-    } else if (action == MenuAction_Cancel) {
-        /* 		if(IsClientInGame(client) && viendo[client])
-                        {
-                                viendo[client] = false;
-                                SetThirdPersonView(client, false);
-                        } */
-        // PrintToServer("Client %d's menu was cancelled.  Reason: %d", client, itemNum);
+    } else if (action == MenuAction_End) {
+        delete menu;
     }
     return 0;
 }
@@ -320,7 +308,6 @@ public void LoadHats() {
     AddMenuItem(menu_editor, "Angle Z-0.5", "Angle Z - 0.5");
     AddMenuItem(menu_editor, "save", "Save");
     SetMenuExitBackButton(menu_editor, true);
-    // SetMenuExitButton(menu_editor, true);
 
     menu_editor2 = new Menu(DIDMenuHandler3);
     SetMenuTitle(menu_editor2, "Hats Editor");
@@ -339,15 +326,8 @@ public void LoadHats() {
     AddMenuItem(menu_editor2, "Angle Z-0.5", "Angle Z - 0.5");
     AddMenuItem(menu_editor2, "save", "Save");
     SetMenuExitBackButton(menu_editor2, true);
-    // SetMenuExitButton(menu_editor2, true);
 }
 
-/* stock LookupAttachment(client, char point[])
-{
-    if(g_hLookupAttachment==INVALID_HANDLE) return 0;
-    if( client<=0 || !IsClientInGame(client) ) return 0;
-    return SDKCall(g_hLookupAttachment, client, point);
-} */
 public void OnMapStart() {
     for (int i = 0; i < g_hats; ++i) {
         if (!StrEqual(g_eHats[i].szModel, "none") && strcmp(g_eHats[i].szModel, "") != 0) {
@@ -360,14 +340,6 @@ public void OnMapStart() {
 void CreateHat(int client) {
     if (!IsPlayerAlive(client) || GetClientTeam(client) < 2 || IsFakeClient(client))
         return;
-
-    // PrintToChatAll("paso0");
-    /* 	new bool:second = false;
-            if(!LookupAttachment(client, g_eHats[g_Elegido[client]].szAttachment))
-            {
-                    if(LookupAttachment(client, "forward")) second = true;
-                    else return;
-            } */
 
     if (StrEqual(g_eHats[g_Elegido[client]].szModel, "none"))
         return;
@@ -455,8 +427,6 @@ void CreateHat(int client) {
         SetVariantString(g_eHats[g_Elegido[client]].szAttachment);
     else
         SetVariantString(Items.szAttachment);
-    /* 	if(!second) SetVariantString(g_eHats[g_Elegido[client]].szAttachment);
-            else SetVariantString("forward"); */
     AcceptEntityInput(m_iEnt, "SetParentAttachmentMaintainOffset", m_iEnt, m_iEnt, 0);
 }
 
@@ -541,34 +511,32 @@ public void RemoveHat(int client) {
 }
 
 stock void SetThirdPersonView(int client, bool third) {
-    if (!g_bThirdPerson || !IsPlayerAlive(client)) {
+    if (!g_bThirdPerson || !IsPlayerAlive(client))
         return;
-    }
 
     if (third) {
-
         SetEntPropEnt(client, Prop_Send, "m_hObserverTarget", 0);
         SetEntProp(client, Prop_Send, "m_iObserverMode", 1);
         SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 0);
         SetEntProp(client, Prop_Send, "m_iFOV", 120);
         SendConVarValue(client, mp_forcecamera, "1");
-        // SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 0.0);
+        SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 0.0);
 
         SetEntProp(client, Prop_Send, "m_iHideHUD", GetEntProp(client, Prop_Send, "m_iHideHUD") | HIDE_RADAR_CSGO);
         SetEntProp(client, Prop_Send, "m_iHideHUD", GetEntProp(client, Prop_Send, "m_iHideHUD") | HIDE_CROSSHAIR_CSGO);
-    } else {
-        SetEntPropEnt(client, Prop_Send, "m_hObserverTarget", -1);
-        SetEntProp(client, Prop_Send, "m_iObserverMode", 0);
-        SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 1);
-        SetEntProp(client, Prop_Send, "m_iFOV", 90);
-        char valor[6];
-        GetConVarString(mp_forcecamera, valor, 6);
-        SendConVarValue(client, mp_forcecamera, valor);
-        // SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.0);
-
-        SetEntProp(client, Prop_Send, "m_iHideHUD", GetEntProp(client, Prop_Send, "m_iHideHUD") & ~HIDE_RADAR_CSGO);
-        SetEntProp(client, Prop_Send, "m_iHideHUD", GetEntProp(client, Prop_Send, "m_iHideHUD") & ~HIDE_CROSSHAIR_CSGO);
+        return;
     }
+    SetEntPropEnt(client, Prop_Send, "m_hObserverTarget", -1);
+    SetEntProp(client, Prop_Send, "m_iObserverMode", 0);
+    SetEntProp(client, Prop_Send, "m_bDrawViewmodel", 1);
+    SetEntProp(client, Prop_Send, "m_iFOV", 90);
+    char valor[6];
+    GetConVarString(mp_forcecamera, valor, 6);
+    SendConVarValue(client, mp_forcecamera, valor);
+    SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.0);
+
+    SetEntProp(client, Prop_Send, "m_iHideHUD", GetEntProp(client, Prop_Send, "m_iHideHUD") & ~HIDE_RADAR_CSGO);
+    SetEntProp(client, Prop_Send, "m_iHideHUD", GetEntProp(client, Prop_Send, "m_iHideHUD") & ~HIDE_CROSSHAIR_CSGO);
 }
 
 public Action DOMenu(int client, int args) {
@@ -604,7 +572,7 @@ public int DIDMenuHandler_init(Menu menu, MenuAction action, int client, int ite
             ShowMenu2(client, 0);
 
     } else if (action == MenuAction_End) {
-        CloseHandle(menu);
+        delete menu;
     }
     return 0;
 }
@@ -696,7 +664,8 @@ public int DIDMenuHandler2(Menu menu, MenuAction action, int client, int itemNum
         if (itemNum == MenuCancel_ExitBack) {
             DOMenu(client, 0);
         }
-        // PrintToServer("Client %d's menu was cancelled.  Reason: %d", client, itemNum);
+    } else if (action == MenuAction_End) {
+        delete menu;
     }
     return 0;
 }
@@ -945,34 +914,27 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
             DOMenu(client, 0);
         }
         // PrintToServer("Client %d's menu was cancelled.  Reason: %d", client, itemNum);
+    } else if (action == MenuAction_End) {
+        delete menu;
     }
     return 0;
 }
 
 // Just a quick function.
 stock bool HasPermission(int iClient, char[] flagString) {
-    if (StrEqual(flagString, "")) {
+    if (StrEqual(flagString, ""))
         return true;
-    }
 
     AdminId admin = GetUserAdmin(iClient);
-
-    if (admin != INVALID_ADMIN_ID) {
-        int count, found, flags = ReadFlagString(flagString);
-        for (int i = 0; i <= 20; i++) {
-            if (flags & (1 << i)) {
-                count++;
-
-                if (GetAdminFlag(admin, view_as<AdminFlag>(i))) {
-                    found++;
-                }
-            }
-        }
-
-        if (count == found) {
-            return true;
+    if (admin == INVALID_ADMIN_ID)
+        return false;
+    int count, found, flags = ReadFlagString(flagString);
+    for (int i = 0; i <= 20; i++) {
+        if (flags & (1 << i)) {
+            count++;
+            if (GetAdminFlag(admin, view_as<AdminFlag>(i)))
+                found++;
         }
     }
-
-    return false;
+    return count == found;
 }
