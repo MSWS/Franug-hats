@@ -146,7 +146,7 @@ public void OnClientPutInServer(int client) {
 }
 
 public MRESReturn SetModel(int client, Handle hParams) {
-    if (IsValidHandle(timers[client])) {
+    if (timers[client] != INVALID_HANDLE) {
         return MRES_Ignored;
     } else
         timers[client] = CreateTimer(2.5, ReHats, client);
@@ -214,13 +214,16 @@ public int DIDMenuHandler(Menu menu, MenuAction action, int client, int itemNum)
         CPrintToChat(client, " {darkred}[f-Hats] %T", "Chosen", client, g_eHats[g_Elegido[client]].Name);
         CreateHat(client);
         Showmenuh(client, GetMenuSelectionPosition());
+    } else if (action == MenuAction_Cancel) {
+        viendo[client] = false;
+        SetThirdPersonView(client, false);
     }
     return 0;
 }
 
 public void LoadHats() {
     for (int i = 0; i < g_hats; ++i) {
-        if (IsValidHandle(g_mHats[g_hats])) {
+        if (g_mHats[g_hats] != INVALID_HANDLE) {
             CloseHandle(g_mHats[g_hats]);
             g_mHats[g_hats] = INVALID_HANDLE;
         }
@@ -228,13 +231,13 @@ public void LoadHats() {
     g_hats = 0;
     BuildPath(Path_SM, sConfig, PLATFORM_MAX_PATH, "configs/franug_hats.txt");
 
-    if (IsValidHandle(kv))
+    if (kv != INVALID_HANDLE)
         CloseHandle(kv);
 
     kv = CreateKeyValues("Hats");
     FileToKeyValues(kv, sConfig);
 
-    Hat g_array;
+    Hat2 g_array;
     if (KvGotoFirstSubKey(kv)) {
         do {
             float m_fTemp[3];
@@ -250,7 +253,7 @@ public void LoadHats() {
             KvGetString(kv, "flag", g_eHats[g_hats].flag, 8, "");
 
             if (KvJumpToKey(kv, "playermodels")) {
-                g_mHats[g_hats] = CreateArray(134);
+                g_mHats[g_hats] = CreateArray(sizeof(Hat2));
 
                 if (KvGotoFirstSubKey(kv)) {
                     do {
@@ -274,7 +277,7 @@ public void LoadHats() {
     }
     KvRewind(kv);
 
-    if (IsValidHandle(menu_hats))
+    if (menu_hats != INVALID_HANDLE)
         CloseHandle(menu_hats);
 
     menu_hats = new Menu(DIDMenuHandler);
@@ -286,7 +289,7 @@ public void LoadHats() {
     }
     SetMenuExitButton(menu_hats, true);
 
-    if (IsValidHandle(menu_editor))
+    if (menu_editor != INVALID_HANDLE)
         CloseHandle(menu_editor);
 
     menu_editor = new Menu(DIDMenuHandler2);
@@ -357,7 +360,7 @@ void CreateHat(int client) {
 
     bool found = false;
     Hat2 Items;
-    if (IsValidHandle(g_mHats[g_Elegido[client]])) {
+    if (g_mHats[g_Elegido[client]] != INVALID_HANDLE) {
 
         char buscado[64];
         GetClientModel(client, buscado, 64);
@@ -440,7 +443,7 @@ public Action PlayerDeath(Handle event, char[] name, bool dontBroadcast) {
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
     if (IsFakeClient(client))
         return Plugin_Continue;
-    if (IsValidHandle(timers[client])) {
+    if (timers[client] != INVALID_HANDLE) {
         KillTimer(timers[client]);
         timers[client] = INVALID_HANDLE;
     }
@@ -470,7 +473,7 @@ public void OnClientDisconnect(int client) {
         Format(SprayString, sizeof(SprayString), "%i", g_Elegido[client]);
         SetClientCookie(client, c_GameSprays, SprayString);
     }
-    if (IsValidHandle(timers[client])) {
+    if (timers[client] != INVALID_HANDLE) {
         KillTimer(timers[client]);
         timers[client] = INVALID_HANDLE;
     }
@@ -696,7 +699,6 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
             int index;
             if (g_mHats[g_Elegido[client]] == INVALID_HANDLE) {
                 g_mHats[g_Elegido[client]] = CreateArray(134);
-
                 Items.fPosition = g_eHats[g_Elegido[client]].fPosition;
                 Items.fAngles   = g_eHats[g_Elegido[client]].fAngles;
                 Format(Items.szAttachment, 64, "facemask");
@@ -798,7 +800,6 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
             GetClientModel(client, buscado, 64);
             bool found = false;
             if (g_mHats[g_Elegido[client]] == INVALID_HANDLE) {
-
                 g_mHats[g_Elegido[client]] = CreateArray(134);
                 KvJumpToKey(kv, g_eHats[g_Elegido[client]].Name);
                 KvJumpToKey(kv, "playermodels", true);
