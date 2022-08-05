@@ -168,6 +168,7 @@ public Action ReHats(Handle timer, int client) {
     }
 
     timers[client] = INVALID_HANDLE;
+    return Plugin_Handled;
 }
 
 public void OnPluginEnd() {
@@ -179,9 +180,10 @@ public void OnPluginEnd() {
 public Action Event_PlayerSpawn(Handle event, char[] name, bool dontBroadcast) {
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
     if (IsFakeClient(client))
-        return;
+        return Plugin_Continue;
     viendo[client] = false;
     timers[client] = CreateTimer(2.5, ReHats, client);
+    return Plugin_Continue;
 }
 
 public Action Command_Hats(int client, int args) {
@@ -212,7 +214,7 @@ public int DIDMenuHandler(Menu menu, MenuAction action, int client, int itemNum)
         if (!HasPermission(client, g_eHats[index].flag)) {
             CPrintToChat(client, " {darkred}[f-Hats] %T", "NoAccess", client);
             Showmenuh(client, GetMenuSelectionPosition());
-            return;
+            return 0;
         }
         RemoveHat(client);
         g_Elegido[client] = index;
@@ -227,6 +229,7 @@ public int DIDMenuHandler(Menu menu, MenuAction action, int client, int itemNum)
                         } */
         // PrintToServer("Client %d's menu was cancelled.  Reason: %d", client, itemNum);
     }
+    return 0;
 }
 
 public void LoadHats() {
@@ -468,7 +471,7 @@ public void Bonemerge(int ent) {
 public Action PlayerDeath(Handle event, char[] name, bool dontBroadcast) {
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
     if (IsFakeClient(client))
-        return;
+        return Plugin_Continue;
     if (timers[client] != INVALID_HANDLE) {
         KillTimer(timers[client]);
         timers[client] = INVALID_HANDLE;
@@ -478,6 +481,7 @@ public Action PlayerDeath(Handle event, char[] name, bool dontBroadcast) {
         SetThirdPersonView(client, false);
     }
     RemoveHat(client);
+    return Plugin_Continue;
 }
 
 public void OnClientCookiesCached(int client) {
@@ -602,6 +606,7 @@ public int DIDMenuHandler_init(Menu menu, MenuAction action, int client, int ite
     } else if (action == MenuAction_End) {
         CloseHandle(menu);
     }
+    return 0;
 }
 
 void ShowMenu(int client, int item) {
@@ -693,6 +698,7 @@ public int DIDMenuHandler2(Menu menu, MenuAction action, int client, int itemNum
         }
         // PrintToServer("Client %d's menu was cancelled.  Reason: %d", client, itemNum);
     }
+    return 0;
 }
 
 public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum) {
@@ -860,7 +866,7 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
                 CPrintToChat(client, " {darkred}[f-Hats] %T", "ConfigSaved", client);
 
                 ShowMenu2(client, GetMenuSelectionPosition());
-                return;
+                return 0;
             }
 
             if (!found) {
@@ -940,6 +946,7 @@ public int DIDMenuHandler3(Menu menu, MenuAction action, int client, int itemNum
         }
         // PrintToServer("Client %d's menu was cancelled.  Reason: %d", client, itemNum);
     }
+    return 0;
 }
 
 // Just a quick function.
