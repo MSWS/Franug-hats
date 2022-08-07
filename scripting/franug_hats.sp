@@ -85,12 +85,13 @@ public void OnPluginStart() {
     CreateConVar("sm_franughats_version", DATA, "", FCVAR_SPONLY | FCVAR_REPLICATED | FCVAR_NOTIFY);
 
     c_GameSprays = RegClientCookie("Hats", "Hats", CookieAccess_Private);
-    RegConsoleCmd("sm_hats", Command_Hats);
 
     // ConVars
     g_hThirdPerson   = CreateConVar("sm_franughats_thirdperson", "1", "Enable/Disable third-person view.", _, true, 0.0, true, 1.0);
     g_bAllowMovement = CreateConVar("sm_franughats_allowmovement", "0", "Enable/Disable moving while selecting hats.", _, true, 0.0, true, 1.0);
     g_bAllowMidair   = CreateConVar("sm_franughats_allowmidair", "1", "Enable/Disable picking hats while in midair.", _, true, 0.0, true, 1.0);
+
+    RegConsoleCmd("sm_hats", Command_Hats);
 
     // ConVar Changes.
     HookConVarChange(g_hThirdPerson, CVarChanged);
@@ -182,6 +183,10 @@ public Action Event_PlayerSpawn(Handle event, char[] name, bool dontBroadcast) {
 }
 
 public Action Command_Hats(int client, int args) {
+    if (!CheckCommandAccess(client, "sm_hats_flag", ADMFLAG_CUSTOM6)) {
+        CPrintToChat(client, " {darkred}[f-Hats] %T", "NoAccessCommand", client);
+        return Plugin_Handled;
+    }
     if (!(GetEntityFlags(client) & FL_ONGROUND) && !g_bAllowMidair.BoolValue) {
         CPrintToChat(client, " {darkred}[f-Hats] %T", "MidAirBlocked", client);
         return Plugin_Handled;

@@ -9,6 +9,10 @@
 		"pl"	"{default}Nie masz dostepu do tej czapki."
 		"zho"	"{default}你沒有選擇這個裝飾品的權限."
 	}
+	"NoAccessCommand"
+	{
+		"en" "{default}You don't have access to use this command."
+	}
 	"FirstChoose"
 	{
 		"en"	"{default}First choose a hat."
@@ -80,6 +84,6 @@
 	}
 	"MidAirBlocked"
 	{
-		"en" "You must be on the ground to pick a hat."
+		"en" "{default}You must be on the ground to pick a hat."
 	}
 }
